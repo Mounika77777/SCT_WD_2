@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Calculator</title>
+    <style>
+        :root {
+            --primary: #4a5568;
+            --secondary: #2d3748;
+            --accent: #3182ce;
+            --text: #1a202c;
+            --light: #f7fafc;
+            --display-bg: #edf2f7;
+            --button-bg: #e2e8f0;
+            --button-hover: #cbd5e0;
+            --button-active: #a0aec0;
+            --operator-bg: #ebf8ff;
+            --operator-hover: #bee3f8;
+            --operator-active: #90cdf4;
+            --equals-bg: #3182ce;
+            --equals-hover: #2b6cb0;
+            --equals-active: #2c5282;
+            --error: #e53e3e;
+        }
+
+        .dark-mode {
+            --primary: #2d3748;
+            --secondary: #1a202c;
+            --accent: #4299e1;
+            --text: #f7fafc;
+            --light: #2d3748;
+            --display-bg: #1a202c;
+            --button-bg: #4a5568;
+            --button-hover: #718096;
+            --button-active: #a0aec0;
+            --operator-bg: #2c5282;
+            --operator-hover: #2b6cb0;
+            --operator-active: #3182ce;
+            --equals-bg: #4299e1;
+            --equals-hover: #3182ce;
+            --equals-active: #2b6cb0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--light);
+            color: var(--text);
+            padding: 20px;
+        }
+
+        .calculator {
+            width: 100%;
+            max-width: 350px;
+            background-color: var(--primary);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: var(--secondary);
+        }
+
+        .title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--light);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--light);
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .display {
+            padding: 20px;
+            background-color: var(--display-bg);
+            text-align: right;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .previous-operand {
+            font-size: 1.2rem;
+            color: rgba(0, 0, 0, 0.6);
+            margin-bottom: 5px;
+            min-height: 1.2rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .current-operand {
+            font-size: 2.5rem;
+            font-weight: 700;
+            min-height: 2.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .error {
+            color: var(--error);
+            font-size: 1rem;
+            min-height: 1rem;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 15px;
+            grid-template-rows: repeat(6, auto);
+        }
+
+        button {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            background-color: var(--button-bg);
+            color: var(--text);
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button:hover {
+            background-color: var(--button-hover);
+        }
+
+        button:active {
+            background-color: var(--button-active);
+            transform: scale(0.95);
+        }
+
+        .operator {
+            background-color: var(--operator-bg);
+        }
+
+        .operator:hover {
+            background-color: var(--operator-hover);
+        }
+
+        .operator:active {
+            background-color: var(--operator-active);
+        }
+
+        .equals {
+            background-color: var(--equals-bg);
+            color: white;
+        }
+
+        .equals:hover {
+            background-color: var(--equals-hover);
+        }
+
+        .equals:active {
+            background-color: var(--equals-active);
+        }
+
+        .span-2 {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 480px) {
+            .calculator {
+                max-width: 100%;
+            }
+            button {
+                padding: 12px;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .calculator {
+                max-height: 90vh;
+            }
+            .display {
+                min-height: 80px;
+            }
+            button {
+                padding: 10px;
+            }
+        }
+    </style>
+    <script src="https://lib.youware.com/youware-lib.1747145198.js" id="yourware-lib"></script>
+</head>
+
+<body>
+    <div class="calculator">
+        <div class="header">
+            <div class="title">Modern Calculator</div>
+            <button class="theme-toggle" id="themeToggle">☀️</button>
+        </div>
+        <div class="display">
+            <div class="previous-operand" id="previousOperand"></div>
+            <div class="current-operand" id="currentOperand">0</div>
+            <div class="error" id="errorMessage"></div>
+        </div>
+        <div class="buttons">
+            <button class="operator" data-action="clear">C</button>
+            <button class="operator" data-action="backspace">⌫</button>
+            <button class="operator" data-action="percentage">%</button>
+            <button class="operator" data-operator="÷">÷</button>
+
+            <button data-number="7">7</button>
+            <button data-number="8">8</button>
+            <button data-number="9">9</button>
+            <button class="operator" data-operator="×">×</button>
+
+            <button data-number="4">4</button>
+            <button data-number="5">5</button>
+            <button data-number="6">6</button>
+            <button class="operator" data-operator="-">-</button>
+
+            <button data-number="1">1</button>
+            <button data-number="2">2</button>
+            <button data-number="3">3</button>
+            <button class="operator" data-operator="+">+</button>
+
+            <button data-number="00">00</button>
+            <button data-number="0">0</button>
+            <button data-number=".">.</button>
+            <button class="operator" data-operator="=">=</button>
+
+            <!-- <button class="equals" data-action="calculate">Ans</button> -->
+            <!-- <button class="operator" data-action="check-answer">Check</button> -->
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const previousOperandElement = document.getElementById('previousOperand');
+        const currentOperandElement = document.getElementById('currentOperand');
+        const errorMessageElement = document.getElementById('errorMessage');
+        const themeToggleButton = document.getElementById('themeToggle');
+        const numberButtons = document.querySelectorAll('[data-number]');
+        const operatorButtons = document.querySelectorAll('[data-operator]');
+        // const equalsButton = document.querySelector('[data-action="calculate"]');
+        const clearButton = document.querySelector('[data-action="clear"]');
+        const backspaceButton = document.querySelector('[data-action="backspace"]');
+        const percentageButton = document.querySelector('[data-action="percentage"]');
+        //const checkAnswerButton = document.querySelector('[data-action="check-answer"]');
+
+        // Calculator state
+        let currentOperand = '0';
+        let previousOperand = '';
+        let operation = undefined;
+        let shouldResetScreen = false;
+        let lastAnswer = '0';
+        let expectedAnswer = '';
+
+        // Event listeners
+        numberButtons.forEach(button => {
+            button.addEventListener('click', () => appendNumber(button.dataset.number));
+        });
+
+        operatorButtons.forEach(button => {
+            button.addEventListener('click', () => setOperation(button.dataset.operator));
+        });
+
+        // equalsButton.addEventListener('click', calculate);
+        clearButton.addEventListener('click', clear);
+        backspaceButton.addEventListener('click', backspace);
+        percentageButton.addEventListener('click', percentage);
+        themeToggleButton.addEventListener('click', toggleTheme);
+        // checkAnswerButton.addEventListener('click', checkAnswer);
+
+        // Keyboard support
+        document.addEventListener('keydown', handleKeyboardInput);
+
+        // Initialize display
+        updateDisplay();
+
+        // Functions
+        function appendNumber(number) {
+            clearError();
+
+            // Handle reset after calculation
+            if (shouldResetScreen) {
+                currentOperand = '';
+                shouldResetScreen = false;
+            }
+
+            // Prevent multiple decimal points
+            if (number === '.' && currentOperand.includes('.')) return;
+
+            // Replace initial 0 with number unless it's a decimal point
+            if (currentOperand === '0' && number !== '.' && number !== '00') {
+                currentOperand = number;
+            } else if (currentOperand === '0' && number === '00') {
+                currentOperand = '0';
+            } else {
+                currentOperand += number;
+            }
+
+            updateDisplay();
+        }
+
+        function setOperation(operator) {
+            clearError();
+
+            // Perform calculation if an operation is already set
+            if (operation !== undefined) {
+                calculate();
+            }
+
+            operation = operator;
+            previousOperand = currentOperand;
+            shouldResetScreen = true;
+            updateDisplay();
+        }
+
+        function calculate() {
+            clearError();
+
+            if (previousOperand === '' || shouldResetScreen) return;
+
+            let computation;
+            const prev = parseFloat(previousOperand);
+            const current = parseFloat(currentOperand);
+
+            if (isNaN(prev) || isNaN(current)) return;
+
+            try {
+                switch (operation) {
+                    case '+':
+                        computation = prev + current;
+                        break;
+                    case '-':
+                        computation = prev - current;
+                        break;
+                    case '×':
+                        computation = prev * current;
+                        break;
+                    case '÷':
+                        if (current === 0) {
+                            showError('Cannot divide by zero');
+                            return;
+                        }
+                        computation = prev / current;
+                        break;
+                    case '=':
+                        computation = current;
+                        break;
+                    default:
+                        return;
+                }
+
+                currentOperand = roundResult(computation);
+                lastAnswer = currentOperand;
+                operation = undefined;
+                previousOperand = '';
+                shouldResetScreen = true;
+                updateDisplay();
+            } catch (e) {
+                showError('Error in calculation');
+            }
+        }
+
+        function roundResult(number) {
+            // Convert to string to handle floating point precision issues
+            return number.toString();
+        }
+
+        function clear() {
+            currentOperand = '0';
+            previousOperand = '';
+            operation = undefined;
+            shouldResetScreen = false;
+            clearError();
+            updateDisplay();
+        }
+
+        function backspace() {
+            clearError();
+
+            if (shouldResetScreen) {
+                clear();
+                return;
+            }
+
+            if (currentOperand.length === 1) {
+                currentOperand = '0';
+            } else {
+                currentOperand = currentOperand.slice(0, -1);
+            }
+
+            updateDisplay();
+        }
+
+        function percentage() {
+            clearError();
+
+            const current = parseFloat(currentOperand);
+            if (isNaN(current)) return;
+
+            currentOperand = (current / 100).toString();
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            currentOperandElement.textContent = formatDisplay(currentOperand);
+
+            if (operation) {
+                previousOperandElement.textContent = `${formatDisplay(previousOperand)} ${operation}`;
+            } else {
+                previousOperandElement.textContent = '';
+            }
+        }
+
+        function formatDisplay(value) {
+            // Format number for display (add commas for thousands, etc.)
+            const number = parseFloat(value);
+            if (isNaN(number)) return '';
+
+            return number.toLocaleString('en', {
+                maximumFractionDigits: 10
+            });
+        }
+
+        function showError(message) {
+            errorMessageElement.textContent = message;
+        }
+
+        function clearError() {
+            errorMessageElement.textContent = '';
+        }
+
+        function handleKeyboardInput(e) {
+            // Numbers 0-9
+            if (/^[0-9]$/.test(e.key)) {
+                appendNumber(e.key);
+            }
+            // Operators
+            else if (['+', '-', '*', '/', '='].includes(e.key)) {
+                const operatorMap = {
+                    '+': '+',
+                    '-': '-',
+                    '*': '×',
+                    '/': '÷',
+                    '=': '='
+                };
+                setOperation(operatorMap[e.key]);
+            }
+            // Decimal point
+            else if (e.key === '.') {
+                appendNumber('.');
+            }
+            // Equals/Enter
+            else if (e.key === '=' || e.key === 'Enter') {
+                e.preventDefault();
+                calculate();
+            }
+            // Backspace
+            else if (e.key === 'Backspace') {
+                backspace();
+            }
+            // Clear (Escape or Delete)
+            else if (e.key === 'Escape' || e.key === 'Delete') {
+                clear();
+            }
+            // Percentage
+            else if (e.key === '%') {
+                percentage();
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            themeToggleButton.textContent = document.body.classList.contains('dark-mode') ? '🌙' : '☀️';
+        }
+
+       
+
+        
+    </script>
+</body>
+
+</html>
